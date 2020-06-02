@@ -4,9 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+flake8 = "==3.8.2"
+black = "==19.10b0"
 ipython = "*"
 
 [packages]
+flask = "==1.1.1"
+flask-restx = "==0.1.1"
 werkzeug = "==0.16.1"
 
 [requires]
