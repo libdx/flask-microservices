@@ -1,53 +1,27 @@
 import os
+
 from flask import Flask
-from flask_restx import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 
 
-app = Flask(__name__)
-
-api = Api(app)
-
-app_settings = os.getenv('APP_SETTINGS')
-app.config.from_object(app_settings)
-
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 
-class User(db.Model):
-    '''User representation'''
+def create_app(script_info=None):
+    '''Creates and initializes new Flask instance'''
+    app = Flask(__name__)
 
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(128), nullable=False)
-    email = db.Column(db.String(128), nullable=False)
-    active = db.Column(db.Boolean(), default=True, nullable=False)
+    app_settings = os.getenv('APP_SETTINGS')
+    app.config.from_object(app_settings)
 
-    def __init__(self, username, email):
-        '''Initializes User with username and email
+    db.init_app(app)
 
-        username:
-            string represents unique human readable identifier
-        email:
-            string represents unique email address
+    from project.api.ping import blueprint as ping_blueprint
 
-        '''
-        self.username = username
-        self.email = email
+    app.register_blueprint(ping_blueprint)
 
+    @app.shell_context_processor
+    def ctx():
+        return {'app': app, 'db': db}
 
-class Ping(Resource):
-
-    '''Represents health check'''
-
-    def get(self):
-        '''GET /ping endpoint
-
-        Returns
-            dict object representing health status
-
-        '''
-        return {'status': 'success', 'message': 'pong'}
-
-
-api.add_resource(Ping, '/ping')
+    return app
