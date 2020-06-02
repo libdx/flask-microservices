@@ -16,11 +16,13 @@ class User(db.Model):
     def __init__(self, username, email):
         '''Initializes User with username and email
 
-        username:
-            string represents unique human readable identifier
-        email:
-            string represents unique email address
+        Args:
+            username: string represents unique human readable identifier
+            email: string represents unique email address
 
         '''
         self.username = username
         self.email = email
+
+    def __repr__(self):
+        return f'User {self.id} {self.email}'

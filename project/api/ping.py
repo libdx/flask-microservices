@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restx import Resource, Api
 
-blueprint = Blueprint('ping', __name__)
-api = Api(blueprint)
+ping_blueprint = Blueprint('ping', __name__)
+api = Api(ping_blueprint)
 
 
 class Ping(Resource):
@@ -11,7 +11,7 @@ class Ping(Resource):
     def get(self):
         '''GET /ping endpoint
 
-        Returns
+        Returns:
             dict object representing health status
 
         '''
