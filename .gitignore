@@ -3,3 +3,4 @@ __pycache__
 htmlcov
 node_modules
 .env
+.coverage
