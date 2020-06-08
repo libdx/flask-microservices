@@ -1,7 +1,7 @@
 import json
 
-from project import db
-from project.api.models import User
+from project import db  # noqa
+from project.api.models import User  # noqa
 
 
 def create_payload(username=None, email=None):
