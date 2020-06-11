@@ -15,7 +15,7 @@ class Ping(Resource):
             dict object representing health status
 
         '''
-        return {'status': 'success', 'message': 'pong'}
+        return {'status': 'success', 'message': 'pong!'}
 
 
 api.add_resource(Ping, '/ping')
