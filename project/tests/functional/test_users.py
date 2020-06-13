@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from project import db  # noqa
 from project.api.models import User  # noqa
@@ -78,7 +79,7 @@ def test_get_user(test_app, test_database, add_user):
     assert email in data['email']
 
 
-def test_get_user_with_missing_id(test_app, test_database):
+def test_get_user_with_wrong_id(test_app, test_database):
     client = test_app.test_client()
     response = client.get('/users/1000')
     data = json.loads(response.data.decode())
@@ -105,3 +106,76 @@ def test_get_all_users(test_app, test_database, add_user):
     for index, user_entry in enumerate(user_data):
         assert user_entry['username'] in data[index]['username']
         assert user_entry['email'] in data[index]['email']
+
+
+def test_delete_user(test_app, test_database, add_user):
+    username = 'joe'
+    email = 'joe@example.com'
+
+    user = add_user(username, email)
+
+    user_id = user.id
+
+    client = test_app.test_client()
+    response1 = client.delete(f'/users/{user_id}')
+    data1 = json.loads(response1.data.decode())
+
+    assert response1.status_code == 200
+    assert email in data1['message']
+    assert 'was deleted' in data1['message']
+
+    response2 = client.get(f'/users/{user_id}')
+    data2 = json.loads(response2.data.decode())
+
+    assert response2.status_code == 404
+    assert 'does not exists' in data2['message']
+
+
+def test_delete_user_with_wrong_id(test_app, test_database):
+    user_id = 1000
+    client = test_app.test_client()
+    response = client.delete(f'/users/{user_id}')
+    data = json.loads(response.data.decode())
+
+    assert response.status_code == 404
+    assert 'does not exists' in data['message']
+    assert str(user_id) in data['message']
+
+
+def test_update_user(test_app, test_database, add_user):
+    username = 'joe'
+    email = 'joe@example.com'
+
+    user = add_user(username, email)
+
+    test_database.session.add(user)
+    test_database.session.commit()
+
+    payload = create_payload(username, email)
+    client = test_app.test_client()
+    response = client.put(f'/users/{user.id}', **payload)
+    data = json.loads(response.data.decode())
+
+    assert response.status_code == 200
+    assert email in data['message']
+
+
+@pytest.mark.parametrize(
+    'user_id, user_data, status_code, message',
+    [
+        [1, {}, 400, 'validation failed'],
+        [1, {'email': 'joe@example.com'}, 400, 'validation failed'],
+        [1000, {'username': 'joe', 'email': 'joe@example.com'}, 404, 'does not exists'],
+    ],
+)
+def test_update_user_with_invalid_payload(
+    test_app, test_database, user_id, user_data, status_code, message
+):
+
+    payload = create_payload(**user_data)
+    client = test_app.test_client()
+    response = client.put(f'/users/{user_id}', **payload)
+    data = json.loads(response.data.decode())
+
+    assert response.status_code == status_code
+    assert message in data['message']

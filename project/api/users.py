@@ -1,6 +1,5 @@
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
-
 from project import db
 from project.api.models import User
 
@@ -48,10 +47,42 @@ class Users(Resource):
 
     @api.marshal_with(user)
     def get(self, user_id):
+        '''GET /user/:id'''
+
         user = User.query.filter_by(id=user_id).first()
         if not user:
             api.abort(404, f'User with id {user_id} does not exists')
         return user, 200
+
+    @api.expect(user, validate=True)
+    def put(self, user_id):
+        '''PUT /user/:id'''
+        payload = request.get_json()
+        username = payload.get('username')
+        email = payload.get('email')
+
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            api.abort(404, f'User with id {user_id} does not exists')
+
+        user.username = username
+        user.email = email
+
+        db.session.commit()
+
+        return {'message': f'User {email} was updated', 'status': 'success'}, 200
+
+    def delete(self, user_id):
+        '''DELETE /user/:id
+        Args:
+            user_id: int numeric user identifier
+        '''
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            api.abort(404, f'User with id {user_id} does not exists')
+        db.session.delete(user)
+        db.session.commit()
+        return {'message': f'{user.email} was deleted', 'status': 'success'}
 
 
 api.add_resource(UsersList, '/users')
