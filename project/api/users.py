@@ -1,7 +1,14 @@
 from flask import Blueprint, request
 from flask_restx import Api, Resource, fields
-from project import db
-from project.api.models import User
+
+from project.api.crud import (
+    add_user,
+    delete_user,
+    get_all_users,
+    get_user_by_email,
+    get_user_by_id,
+    update_user,
+)
 
 users_blueprint = Blueprint('users', __name__)
 api = Api(users_blueprint)
@@ -22,7 +29,7 @@ class UsersList(Resource):
 
     @api.marshal_with(user, as_list=True)
     def get(self):
-        return User.query.all(), 200
+        return get_all_users(), 200
 
     @api.expect(user, validate=True)
     def post(self):
@@ -32,11 +39,9 @@ class UsersList(Resource):
         username = payload.get('username')
         email = payload.get('email')
 
-        user = User.query.filter_by(email=email).first()
+        user = get_user_by_email(email)
         if not user:
-            user = User(username=username, email=email)
-            db.session.add(user)
-            db.session.commit()
+            add_user(username, email)
             return {'message': f'user {email} was created', 'status': 'success'}, 201
         else:
             return {'message': f'user {email} already exists', 'status': 'failed'}, 400
@@ -49,7 +54,7 @@ class Users(Resource):
     def get(self, user_id):
         '''GET /user/:id'''
 
-        user = User.query.filter_by(id=user_id).first()
+        user = get_user_by_id(user_id)
         if not user:
             api.abort(404, f'User with id {user_id} does not exists')
         return user, 200
@@ -61,14 +66,11 @@ class Users(Resource):
         username = payload.get('username')
         email = payload.get('email')
 
-        user = User.query.filter_by(id=user_id).first()
+        user = get_user_by_id(user_id)
         if not user:
             api.abort(404, f'User with id {user_id} does not exists')
 
-        user.username = username
-        user.email = email
-
-        db.session.commit()
+        update_user(user, username, email)
 
         return {'message': f'User {email} was updated', 'status': 'success'}, 200
 
@@ -77,11 +79,10 @@ class Users(Resource):
         Args:
             user_id: int numeric user identifier
         '''
-        user = User.query.filter_by(id=user_id).first()
+        user = get_user_by_id(user_id)
         if not user:
             api.abort(404, f'User with id {user_id} does not exists')
-        db.session.delete(user)
-        db.session.commit()
+        delete_user(user)
         return {'message': f'{user.email} was deleted', 'status': 'success'}
 
 

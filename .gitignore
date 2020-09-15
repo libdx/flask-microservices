@@ -4,3 +4,4 @@ htmlcov
 node_modules
 .env
 .coverage
+.idea

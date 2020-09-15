@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from project import create_app, db
 from project.api.models import User
@@ -32,3 +34,21 @@ def add_user():
         return user
 
     return _add_user
+
+
+@pytest.fixture(scope='function')
+def create_payload():
+    '''Factory to create function that formats JSON payload.'''
+
+    def _create_payload(username=None, email=None):
+        data = {}
+        if username:
+            data['username'] = username
+        if email:
+            data['email'] = email
+        return {
+            'data': json.dumps(data),
+            'content_type': 'application/json',
+        }
+
+    return _create_payload

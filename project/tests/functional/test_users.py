@@ -5,19 +5,7 @@ from project import db  # noqa
 from project.api.models import User  # noqa
 
 
-def create_payload(username=None, email=None):
-    data = {}
-    if username:
-        data['username'] = username
-    if email:
-        data['email'] = email
-    return {
-        'data': json.dumps(data),
-        'content_type': 'application/json',
-    }
-
-
-def test_add_user(test_app, test_database):
+def test_add_user(test_app, test_database, create_payload):
     client = test_app.test_client()
     username = 'joe'
     email = 'joe@example.com'
@@ -28,7 +16,7 @@ def test_add_user(test_app, test_database):
     assert email in data['message']
 
 
-def test_add_user_invalid_json(test_app, test_database):
+def test_add_user_invalid_json(test_app, test_database, create_payload):
     client = test_app.test_client()
     payload = create_payload()
     response = client.post('/users', **payload)
@@ -37,7 +25,7 @@ def test_add_user_invalid_json(test_app, test_database):
     assert 'validation failed' in data['message']
 
 
-def test_add_user_missing_username_key(test_app, test_database):
+def test_add_user_missing_username_key(test_app, test_database, create_payload):
     client = test_app.test_client()
     payload = create_payload(username='joe')
     response = client.post('/users', **payload)
@@ -46,7 +34,7 @@ def test_add_user_missing_username_key(test_app, test_database):
     assert 'validation failed' in data['message']
 
 
-def test_add_user_missing_email_key(test_app, test_database):
+def test_add_user_missing_email_key(test_app, test_database, create_payload):
     client = test_app.test_client()
     payload = create_payload(email='joe@example.com')
     response = client.post('/users', **payload)
@@ -55,7 +43,7 @@ def test_add_user_missing_email_key(test_app, test_database):
     assert 'validation failed' in data['message']
 
 
-def test_add_user_duplicated_email(test_app, test_database):
+def test_add_user_duplicated_email(test_app, test_database, create_payload):
     client = test_app.test_client()
     payload = create_payload(username='joe', email='joe@example.com')
     client.post('/users', **payload)
@@ -65,7 +53,7 @@ def test_add_user_duplicated_email(test_app, test_database):
     assert 'already exists' in data['message']
 
 
-def test_get_user(test_app, test_database, add_user):
+def test_get_user(test_app, test_database, add_user, create_payload):
     username = 'joe'
     email = 'joe@example.com'
 
@@ -79,7 +67,7 @@ def test_get_user(test_app, test_database, add_user):
     assert email in data['email']
 
 
-def test_get_user_with_wrong_id(test_app, test_database):
+def test_get_user_with_wrong_id(test_app, test_database, create_payload):
     client = test_app.test_client()
     response = client.get('/users/1000')
     data = json.loads(response.data.decode())
@@ -88,7 +76,7 @@ def test_get_user_with_wrong_id(test_app, test_database):
     assert 'does not exists' in data['message']
 
 
-def test_get_all_users(test_app, test_database, add_user):
+def test_get_all_users(test_app, test_database, add_user, create_payload):
     user_data = [
         {'username': 'joe', 'email': 'joe@example.com'},
         {'username': 'jane', 'email': 'jane@example.com'},
@@ -108,7 +96,7 @@ def test_get_all_users(test_app, test_database, add_user):
         assert user_entry['email'] in data[index]['email']
 
 
-def test_delete_user(test_app, test_database, add_user):
+def test_delete_user(test_app, test_database, add_user, create_payload):
     username = 'joe'
     email = 'joe@example.com'
 
@@ -131,7 +119,7 @@ def test_delete_user(test_app, test_database, add_user):
     assert 'does not exists' in data2['message']
 
 
-def test_delete_user_with_wrong_id(test_app, test_database):
+def test_delete_user_with_wrong_id(test_app, test_database, create_payload):
     user_id = 1000
     client = test_app.test_client()
     response = client.delete(f'/users/{user_id}')
@@ -142,7 +130,7 @@ def test_delete_user_with_wrong_id(test_app, test_database):
     assert str(user_id) in data['message']
 
 
-def test_update_user(test_app, test_database, add_user):
+def test_update_user(test_app, test_database, add_user, create_payload):
     username = 'joe'
     email = 'joe@example.com'
 
@@ -169,7 +157,7 @@ def test_update_user(test_app, test_database, add_user):
     ],
 )
 def test_update_user_with_invalid_payload(
-    test_app, test_database, user_id, user_data, status_code, message
+    test_app, test_database, create_payload, user_id, user_data, status_code, message
 ):
 
     payload = create_payload(**user_data)
