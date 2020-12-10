@@ -15,7 +15,8 @@ ENV PYTHONUNBUFFERED 1
 COPY ./Pipfile ./Pipfile.lock ./
 RUN pipenv install --system --deploy --ignore-pipfile --dev
 
-COPY ./entrypoint.sh /usr/src/app/entrypoint.sh
+COPY . .
+
+COPY ./entrypoint.sh .
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-COPY . /usr/src/app

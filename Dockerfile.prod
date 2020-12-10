@@ -1,11 +1,44 @@
+###########
+# BUILDER #
+###########
+
+FROM python:3.8.1-alpine as builder
+
+RUN apk update && \
+    apk add --virtual build-deps gcc python-dev musl-dev && \
+    apk add postgresql-dev && \
+    apk add netcat-openbsd
+
+WORKDIR /usr/src/app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN pip install --upgrade pip
+RUN pip install pipenv
+RUN pip install pipenv_to_requirements==0.9.0
+COPY ./Pipfile ./Pipfile.lock ./
+RUN pipenv run pipenv_to_requirements
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+
+COPY . .
+RUN pip install -r requirements-dev.txt
+RUN flake8 project
+RUN black project --check
+RUN isort project --check-only
+
+#########
+# FINAL #
+#########
+
 FROM python:3.8.1-alpine
 
 RUN apk update && \
     apk add --virtual build-deps gcc python-dev musl-dev && \
     apk add postgresql-dev && \
     apk add netcat-openbsd
+
 RUN pip install --upgrade pip
-RUN pip install pipenv
 
 WORKDIR /usr/src/app
 
@@ -13,11 +46,15 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV FLASK_APP production
 ENV APP_SETTINGS project.config.ProductionConfig
+ARG SECRET_KEY
+ENV SECRET_KEY $SECRET_KEY
 
-COPY ./Pipfile ./Pipfile.lock ./
-RUN pipenv install --system --deploy --ignore-pipfile
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install --no-cache /wheels/*
 
-COPY . /usr/src/app
+COPY . .
 
 RUN adduser -D appuser
 USER appuser

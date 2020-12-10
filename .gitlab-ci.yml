@@ -21,6 +21,7 @@ build:
         --cache-from $IMAGE:latest
         --tag $IMAGE:latest
         --file ./Dockerfile.prod
+        --build-arg SECRET_KEY=$SECRET_KEY
         "."
     - docker push $IMAGE:latest
 
@@ -34,11 +35,23 @@ test:
     POSTGRES_USER: runner
     POSTGRES_PASSWORD: runner
     DATABASE_TEST_URL: postgres://runner:runner@postgres:5432/users
+  before_script:
+    - python -V
+    - pwd
+    - echo $PATH
+    - which pip
+    - uname -a
   script:
-    - pytest "project/tests" -p no:warnings
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install pipenv_to_requirements
+    - pipenv_to_requirements
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+    - pytest project/tests -p no:warnings
     - flake8 project
     - black project --check
-    - isort project/**/*.py --check-only
+    - isort project --check-only
 
 deploy:
   stage: deploy
@@ -54,6 +67,7 @@ deploy:
     - docker build
         --tag $HEROKU_REGISTRY_IMAGE
         --file ./Dockerfile.prod
+        --build-arg SECRET_KEY=$SECRET_KEY
         "."
     - docker login -u _ -p $HEROKU_AUTH_TOKEN registry.heroku.com
     - docker push $HEROKU_REGISTRY_IMAGE

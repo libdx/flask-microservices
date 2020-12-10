@@ -1,8 +1,9 @@
 import json
 from datetime import datetime
 
-import project.api.users
 import pytest
+
+import project.api.users
 
 
 class AttrDict(dict):
