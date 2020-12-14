@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-import project.api.users
+import project.api.users.views
 
 
 class AttrDict(dict):
@@ -21,8 +21,10 @@ def test_add_user(test_app, monkeypatch, create_payload):
     def mock_add_user(username, email):
         return True
 
-    monkeypatch.setattr(project.api.users, "get_user_by_email", mock_get_user_by_email)
-    monkeypatch.setattr(project.api.users, "add_user", mock_add_user)
+    monkeypatch.setattr(
+        project.api.users.views, "get_user_by_email", mock_get_user_by_email
+    )
+    monkeypatch.setattr(project.api.users.views, "add_user", mock_add_user)
 
     client = test_app.test_client()
     username = "joe"
@@ -68,8 +70,10 @@ def test_add_user_duplicated_email(test_app, monkeypatch, create_payload):
     def mock_add_user(username, email):
         return True
 
-    monkeypatch.setattr(project.api.users, "get_user_by_email", mock_get_user_by_email)
-    monkeypatch.setattr(project.api.users, "add_user", mock_add_user)
+    monkeypatch.setattr(
+        project.api.users.views, "get_user_by_email", mock_get_user_by_email
+    )
+    monkeypatch.setattr(project.api.users.views, "add_user", mock_add_user)
 
     client = test_app.test_client()
     payload = create_payload(username="joe", email="joe@example.com")
@@ -97,7 +101,7 @@ def test_get_user(test_app, monkeypatch, create_payload):
             "created_date": datetime.now(),
         }
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
 
     client = test_app.test_client()
     response = client.get(f"/users/{user_id}")
@@ -111,7 +115,7 @@ def test_get_user_with_wrong_id(test_app, monkeypatch, create_payload):
     def mock_get_user_by_id(user_id):
         return None
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
 
     client = test_app.test_client()
     response = client.get("/users/1000")
@@ -130,7 +134,7 @@ def test_get_all_users(test_app, monkeypatch, create_payload):
     def mock_get_all_users():
         return user_data
 
-    monkeypatch.setattr(project.api.users, "get_all_users", mock_get_all_users)
+    monkeypatch.setattr(project.api.users.views, "get_all_users", mock_get_all_users)
 
     client = test_app.test_client()
     response = client.get("/users")
@@ -156,8 +160,8 @@ def test_delete_user(test_app, monkeypatch, create_payload):
     def mock_delete_user(user):
         return True
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
-    monkeypatch.setattr(project.api.users, "delete_user", mock_delete_user)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "delete_user", mock_delete_user)
 
     client = test_app.test_client()
     response = client.delete(f"/users/{user_id}")
@@ -172,7 +176,7 @@ def test_delete_user_with_wrong_id(test_app, monkeypatch, create_payload):
     def mock_get_user_by_id(user_id):
         return None
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
 
     user_id = 1000
     client = test_app.test_client()
@@ -197,8 +201,8 @@ def test_update_user(test_app, monkeypatch, create_payload):
     def mock_update_user(user, username, email):
         return True
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
-    monkeypatch.setattr(project.api.users, "update_user", mock_update_user)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "update_user", mock_update_user)
 
     payload = create_payload(username, email)
     client = test_app.test_client()
@@ -223,7 +227,7 @@ def test_update_user_with_invalid_payload(
     def mock_get_user_by_id(user_id):
         return None
 
-    monkeypatch.setattr(project.api.users, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
 
     payload = create_payload(**user_data)
     client = test_app.test_client()

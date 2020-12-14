@@ -3,7 +3,7 @@ import json
 import pytest
 
 from project import db  # noqa
-from project.api.models import User  # noqa
+from project.api.users.models import User  # noqa
 
 
 def test_add_user(test_app, test_database, create_payload):
