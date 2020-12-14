@@ -24,3 +24,9 @@ flask-admin = "==1.5.7"
 
 [requires]
 python_version = "3.8"
+
+[scripts]
+test = "pytest project/tests -p no:warnings"
+lint = "flake8 project"
+fix = "black project"
+isort = "isort project"
