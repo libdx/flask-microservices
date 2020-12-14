@@ -24,7 +24,7 @@ def add_user(username, email):
 
 
 def update_user(user, username, email):
-    '''Updates User object'''
+    """Updates User object"""
     user.username = username
     user.email = email
     db.session.commit()

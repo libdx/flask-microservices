@@ -7,9 +7,9 @@ from project import db
 
 
 class User(db.Model):
-    '''User representation'''
+    """User representation"""
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128), nullable=False)
@@ -17,21 +17,21 @@ class User(db.Model):
     created_date = db.Column(db.DateTime, default=func.now(), nullable=False)
 
     def __init__(self, username, email):
-        '''Initializes User with username and email
+        """Initializes User with username and email
 
         Args:
             username: string represents unique human readable identifier
             email: string represents unique email address
 
-        '''
+        """
         self.username = username
         self.email = email
 
     def __repr__(self):
-        return f'User {self.id} {self.email}'
+        return f"User {self.id} {self.email}"
 
 
-if os.getenv('FLASK_ENV') == 'development':
+if os.getenv("FLASK_ENV") == "development":
     from project import admin
 
     admin.add_view(ModelView(User, db.session))
