@@ -21,13 +21,9 @@ def create_app(script_info=None):
     if os.getenv("FLASK_ENV") == "development":
         admin.init_app(app)
 
-    from project.api.ping.views import ping_blueprint
+    from project.api import api
 
-    app.register_blueprint(ping_blueprint)
-
-    from project.api.users.views import users_blueprint
-
-    app.register_blueprint(users_blueprint)
+    api.init_app(app)
 
     @app.shell_context_processor
     def ctx():

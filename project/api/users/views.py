@@ -1,5 +1,5 @@
-from flask import Blueprint, request
-from flask_restx import Api, Resource, fields
+from flask import request
+from flask_restx import Namespace, Resource, fields
 
 from project.api.users.crud import (
     add_user,
@@ -10,10 +10,9 @@ from project.api.users.crud import (
     update_user,
 )
 
-users_blueprint = Blueprint("users", __name__)
-api = Api(users_blueprint)
+namespace = Namespace("users")
 
-user = api.model(
+user = namespace.model(
     "User",
     {
         "id": fields.Integer(readOnly=True),
@@ -27,13 +26,16 @@ user = api.model(
 class UsersList(Resource):
     """Represents /users endpoint"""
 
-    @api.marshal_with(user, as_list=True)
+    @namespace.marshal_with(user, as_list=True)
     def get(self):
+        """Returns all users."""
         return get_all_users(), 200
 
-    @api.expect(user, validate=True)
+    @namespace.expect(user, validate=True)
+    @namespace.response(201, "user <user_email> was created")
+    @namespace.response(400, "user <user_email> already exists")
     def post(self):
-        """POST /users"""
+        """Creates a new user."""
 
         payload = request.get_json()
         username = payload.get("username")
@@ -50,41 +52,54 @@ class UsersList(Resource):
 class Users(Resource):
     """Represents /users/<user_id> endpoint"""
 
-    @api.marshal_with(user)
+    @namespace.marshal_with(user)
+    @namespace.response(200, "Success")
+    @namespace.response(404, "User with id <user_id> does not exists")
     def get(self, user_id):
-        """GET /user/:id"""
+        """Returns a single user."""
 
         user = get_user_by_id(user_id)
         if not user:
-            api.abort(404, f"User with id {user_id} does not exists")
+            namespace.abort(404, f"User with id {user_id} does not exists")
         return user, 200
 
-    @api.expect(user, validate=True)
+    @namespace.expect(user, validate=True)
+    @namespace.response(200, "User with id <user_id> was updated")
+    @namespace.response(404, "User with id <user_id> does not exists")
+    @namespace.response(400, "Email is already taken")
     def put(self, user_id):
-        """PUT /user/:id"""
+        """Updates the user."""
+
         payload = request.get_json()
         username = payload.get("username")
         email = payload.get("email")
 
         user = get_user_by_id(user_id)
         if not user:
-            api.abort(404, f"User with id {user_id} does not exists")
+            namespace.abort(404, f"User with id {user_id} does not exists")
+
+        if get_user_by_email(email) != user:
+            namespace.abort(400, f"{email} is already taken")
 
         update_user(user, username, email)
 
         return {"message": f"User {email} was updated", "status": "success"}, 200
 
+    @namespace.response(200, "<user_id> was deleted")
+    @namespace.response(404, "<user_id> does not exists")
     def delete(self, user_id):
-        """DELETE /user/:id
+        """Deletes the user.
+
         Args:
-            user_id: int numeric user identifier
+            user_id (int): numeric user identifier
         """
+
         user = get_user_by_id(user_id)
         if not user:
-            api.abort(404, f"User with id {user_id} does not exists")
+            namespace.abort(404, f"User with id {user_id} does not exists")
         delete_user(user)
-        return {"message": f"{user.email} was deleted", "status": "success"}
+        return {"message": f"{user.email} was deleted", "status": "success"}, 200
 
 
-api.add_resource(UsersList, "/users")
-api.add_resource(Users, "/users/<int:user_id>")
+namespace.add_resource(UsersList, "")
+namespace.add_resource(Users, "/<int:user_id>")

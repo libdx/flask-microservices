@@ -201,8 +201,16 @@ def test_update_user(test_app, monkeypatch, create_payload):
     def mock_update_user(user, username, email):
         return True
 
+    def mock_get_user_by_email(email):
+        user = AttrDict()
+        user.update({"id": user_id, "username": username, "email": email})
+        return user
+
     monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
     monkeypatch.setattr(project.api.users.views, "update_user", mock_update_user)
+    monkeypatch.setattr(
+        project.api.users.views, "get_user_by_email", mock_get_user_by_email
+    )
 
     payload = create_payload(username, email)
     client = test_app.test_client()
@@ -211,6 +219,38 @@ def test_update_user(test_app, monkeypatch, create_payload):
 
     assert response.status_code == 200
     assert email in data["message"]
+
+
+def test_update_user_with_existing_email(test_app, monkeypatch, create_payload):
+    user_id = 1
+    username = "joe"
+    email = "joe@example.com"
+
+    def mock_get_user_by_id(user_id):
+        user = AttrDict()
+        user.update({"id": user_id, "username": username, "email": email})
+        return user
+
+    def mock_update_user(user, username, email):
+        return True
+
+    def mock_get_user_by_email(email):
+        return True
+
+    monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(project.api.users.views, "update_user", mock_update_user)
+    monkeypatch.setattr(
+        project.api.users.views, "get_user_by_email", mock_get_user_by_email
+    )
+
+    payload = create_payload(username, email)
+    client = test_app.test_client()
+    response = client.put(f"/users/{user_id}", **payload)
+    data = json.loads(response.data.decode())
+
+    assert response.status_code == 400
+    assert email in data["message"]
+    assert "taken" in data["message"]
 
 
 @pytest.mark.parametrize(
@@ -227,7 +267,13 @@ def test_update_user_with_invalid_payload(
     def mock_get_user_by_id(user_id):
         return None
 
+    def mock_get_user_by_email(email):
+        return False
+
     monkeypatch.setattr(project.api.users.views, "get_user_by_id", mock_get_user_by_id)
+    monkeypatch.setattr(
+        project.api.users.views, "get_user_by_email", mock_get_user_by_email
+    )
 
     payload = create_payload(**user_data)
     client = test_app.test_client()

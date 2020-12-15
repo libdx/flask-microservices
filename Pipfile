@@ -27,6 +27,7 @@ python_version = "3.8"
 
 [scripts]
 test = "pytest project/tests -p no:warnings"
+cov = "pytest project/tests -p no:warnings --cov=project"
 lint = "flake8 project"
 fix = "black project"
 isort = "isort project"
