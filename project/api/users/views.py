@@ -22,6 +22,10 @@ user = namespace.model(
     },
 )
 
+user_post = namespace.inherit(
+    "User POST", user, {"password": fields.String(required=True)}
+)
+
 
 class UsersList(Resource):
     """Represents /users endpoint"""
@@ -31,7 +35,7 @@ class UsersList(Resource):
         """Returns all users."""
         return get_all_users(), 200
 
-    @namespace.expect(user, validate=True)
+    @namespace.expect(user_post, validate=True)
     @namespace.response(201, "user <user_email> was created")
     @namespace.response(400, "user <user_email> already exists")
     def post(self):
@@ -40,10 +44,11 @@ class UsersList(Resource):
         payload = request.get_json()
         username = payload.get("username")
         email = payload.get("email")
+        password = payload.get("password")
 
         user = get_user_by_email(email)
         if not user:
-            add_user(username, email)
+            add_user(username, email, password)
             return {"message": f"user {email} was created", "status": "success"}, 201
         else:
             return {"message": f"user {email} already exists", "status": "failed"}, 400

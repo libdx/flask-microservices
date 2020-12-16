@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from project import db  # noqa
+from project import bcrypt, db  # noqa
+from project.api.users.crud import get_user_by_id
 from project.api.users.models import User  # noqa
 
 
@@ -15,6 +16,7 @@ def test_add_user(test_app, test_database, create_payload):
     data = json.loads(response.data.decode())
     assert response.status_code == 201
     assert email in data["message"]
+    assert "password" not in data
 
 
 def test_add_user_invalid_json(test_app, test_database, create_payload):
@@ -66,6 +68,7 @@ def test_get_user(test_app, test_database, add_user, create_payload):
     assert response.status_code == 200
     assert username in data["username"]
     assert email in data["email"]
+    assert "password" not in data
 
 
 def test_get_user_with_wrong_id(test_app, test_database, create_payload):
@@ -95,6 +98,7 @@ def test_get_all_users(test_app, test_database, add_user, create_payload):
     for index, user_entry in enumerate(user_data):
         assert user_entry["username"] in data[index]["username"]
         assert user_entry["email"] in data[index]["email"]
+        assert "password" not in data[index]
 
 
 def test_delete_user(test_app, test_database, add_user, create_payload):
@@ -147,6 +151,30 @@ def test_update_user(test_app, test_database, add_user, create_payload):
 
     assert response.status_code == 200
     assert email in data["message"]
+    assert "password" not in data
+
+
+def test_update_user_with_password(test_app, test_database, add_user, create_payload):
+    username = "joe"
+    email = "joe@example.com"
+    password1 = "A"
+    password2 = "B"
+
+    user = add_user(username, email, password1)
+    assert bcrypt.check_password_hash(user.password, password1)
+
+    payload = create_payload(username, email, password2)
+    client = test_app.test_client()
+    response = client.put(f"/users/{user.id}", **payload)
+    data = json.loads(response.data.decode())
+
+    assert response.status_code == 200
+    assert email in data["message"]
+    assert "password" not in data
+
+    user = get_user_by_id(user.id)
+    assert bcrypt.check_password_hash(user.password, password1)
+    assert not bcrypt.check_password_hash(user.password, password2)
 
 
 @pytest.mark.parametrize(

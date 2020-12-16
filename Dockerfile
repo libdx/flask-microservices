@@ -3,7 +3,9 @@ FROM python:3.8.1-alpine
 RUN apk update && \
     apk add --virtual build-deps gcc python-dev musl-dev && \
     apk add postgresql-dev && \
-    apk add netcat-openbsd
+    apk add netcat-openbsd && \
+    apk add libffi-dev
+
 RUN pip install --upgrade pip
 RUN pip install pipenv
 

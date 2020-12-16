@@ -18,7 +18,7 @@ def test_add_user(test_app, monkeypatch, create_payload):
     def mock_get_user_by_email(email):
         return None
 
-    def mock_add_user(username, email):
+    def mock_add_user(username, email, password):
         return True
 
     monkeypatch.setattr(
@@ -34,6 +34,7 @@ def test_add_user(test_app, monkeypatch, create_payload):
     data = json.loads(response.data.decode())
     assert response.status_code == 201
     assert email in data["message"]
+    assert "password" not in data
 
 
 def test_add_user_invalid_json(test_app, monkeypatch, create_payload):
@@ -67,7 +68,7 @@ def test_add_user_duplicated_email(test_app, monkeypatch, create_payload):
     def mock_get_user_by_email(email):
         return True
 
-    def mock_add_user(username, email):
+    def mock_add_user(username, email, password):
         return True
 
     monkeypatch.setattr(
@@ -109,6 +110,7 @@ def test_get_user(test_app, monkeypatch, create_payload):
     assert response.status_code == 200
     assert username in data["username"]
     assert email in data["email"]
+    assert "password" not in data
 
 
 def test_get_user_with_wrong_id(test_app, monkeypatch, create_payload):
@@ -169,6 +171,7 @@ def test_delete_user(test_app, monkeypatch, create_payload):
 
     assert response.status_code == 200
     assert email in data["message"]
+    assert "password" not in data
     assert "was deleted" in data["message"]
 
 
@@ -219,6 +222,7 @@ def test_update_user(test_app, monkeypatch, create_payload):
 
     assert response.status_code == 200
     assert email in data["message"]
+    assert "password" not in data
 
 
 def test_update_user_with_existing_email(test_app, monkeypatch, create_payload):
@@ -250,6 +254,7 @@ def test_update_user_with_existing_email(test_app, monkeypatch, create_payload):
 
     assert response.status_code == 400
     assert email in data["message"]
+    assert "password" not in data
     assert "taken" in data["message"]
 
 

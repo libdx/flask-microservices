@@ -1,5 +1,7 @@
 from flask_admin.contrib.sqla import ModelView
 
+from project import bcrypt
+
 
 class UsersAdminView(ModelView):
     column_searchable_list = (
@@ -22,3 +24,6 @@ class UsersAdminView(ModelView):
         "created_date",
     )
     column_default_sort = ("created_date", True)
+
+    def on_model_change(self, form, model, is_created):
+        model.password = bcrypt.generate_password_hash(model.password).decode()

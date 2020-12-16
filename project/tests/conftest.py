@@ -28,8 +28,8 @@ def test_database():
 def add_user():
     """Factory to create function that adds new user to database"""
 
-    def _add_user(username, email):
-        user = User(username, email)
+    def _add_user(username, email, password="verysecredpassword"):
+        user = User(username, email, password=password)
         db.session.add(user)
         db.session.commit()
         return user
@@ -41,12 +41,14 @@ def add_user():
 def create_payload():
     """Factory to create function that formats JSON payload."""
 
-    def _create_payload(username=None, email=None):
+    def _create_payload(username=None, email=None, password="verysecredpassword"):
         data = {}
         if username:
             data["username"] = username
         if email:
             data["email"] = email
+        if password:
+            data["password"] = password
         return {
             "data": json.dumps(data),
             "content_type": "application/json",
