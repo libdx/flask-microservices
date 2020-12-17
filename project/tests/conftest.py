@@ -41,17 +41,18 @@ def add_user():
 def create_payload():
     """Factory to create function that formats JSON payload."""
 
-    def _create_payload(username=None, email=None, password="verysecredpassword"):
-        data = {}
-        if username:
-            data["username"] = username
-        if email:
-            data["email"] = email
-        if password:
-            data["password"] = password
-        return {
-            "data": json.dumps(data),
-            "content_type": "application/json",
-        }
+    def _create_payload(auth_token=None, **data):
+        payload = {}
+
+        if data:
+            payload = {
+                "data": json.dumps(data),
+                "content_type": "application/json",
+            }
+
+        if auth_token:
+            payload["headers"] = {"Authorization": f"Bearer {auth_token}"}
+
+        return payload
 
     return _create_payload

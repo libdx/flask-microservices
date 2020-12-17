@@ -11,7 +11,7 @@ def test_add_user(test_app, test_database, create_payload):
     client = test_app.test_client()
     username = "joe"
     email = "joe@example.com"
-    payload = create_payload(username, email)
+    payload = create_payload(username=username, email=email, password="123")
     response = client.post("/users", **payload)
     data = json.loads(response.data.decode())
     assert response.status_code == 201
@@ -48,7 +48,7 @@ def test_add_user_missing_email_key(test_app, test_database, create_payload):
 
 def test_add_user_duplicated_email(test_app, test_database, create_payload):
     client = test_app.test_client()
-    payload = create_payload(username="joe", email="joe@example.com")
+    payload = create_payload(username="joe", email="joe@example.com", password="123")
     client.post("/users", **payload)
     response = client.post("/users", **payload)
     data = json.loads(response.data.decode())
@@ -144,7 +144,7 @@ def test_update_user(test_app, test_database, add_user, create_payload):
     test_database.session.add(user)
     test_database.session.commit()
 
-    payload = create_payload(username, email)
+    payload = create_payload(username=username, email=email)
     client = test_app.test_client()
     response = client.put(f"/users/{user.id}", **payload)
     data = json.loads(response.data.decode())
@@ -163,7 +163,7 @@ def test_update_user_with_password(test_app, test_database, add_user, create_pay
     user = add_user(username, email, password1)
     assert bcrypt.check_password_hash(user.password, password1)
 
-    payload = create_payload(username, email, password2)
+    payload = create_payload(username=username, email=email, password=password2)
     client = test_app.test_client()
     response = client.put(f"/users/{user.id}", **payload)
     data = json.loads(response.data.decode())

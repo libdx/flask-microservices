@@ -29,7 +29,7 @@ def test_add_user(test_app, monkeypatch, create_payload):
     client = test_app.test_client()
     username = "joe"
     email = "joe@example.com"
-    payload = create_payload(username, email)
+    payload = create_payload(username=username, email=email, password="123")
     response = client.post("/users", **payload)
     data = json.loads(response.data.decode())
     assert response.status_code == 201
@@ -77,7 +77,7 @@ def test_add_user_duplicated_email(test_app, monkeypatch, create_payload):
     monkeypatch.setattr(project.api.users.views, "add_user", mock_add_user)
 
     client = test_app.test_client()
-    payload = create_payload(username="joe", email="joe@example.com")
+    payload = create_payload(username="joe", email="joe@example.com", password="123")
     response = client.post("/users", **payload)
     data = json.loads(response.data.decode())
     assert response.status_code == 400
@@ -85,11 +85,6 @@ def test_add_user_duplicated_email(test_app, monkeypatch, create_payload):
 
 
 def test_get_user(test_app, monkeypatch, create_payload):
-    # username = 'joe'
-    # email = 'joe@example.com'
-    #
-    # user = add_user(username, email)
-
     user_id = 1
     username = "joe"
     email = "joe@example.com"
@@ -215,7 +210,7 @@ def test_update_user(test_app, monkeypatch, create_payload):
         project.api.users.views, "get_user_by_email", mock_get_user_by_email
     )
 
-    payload = create_payload(username, email)
+    payload = create_payload(username=username, email=email)
     client = test_app.test_client()
     response = client.put(f"/users/{user_id}", **payload)
     data = json.loads(response.data.decode())
@@ -247,7 +242,7 @@ def test_update_user_with_existing_email(test_app, monkeypatch, create_payload):
         project.api.users.views, "get_user_by_email", mock_get_user_by_email
     )
 
-    payload = create_payload(username, email)
+    payload = create_payload(username=username, email=email)
     client = test_app.test_client()
     response = client.put(f"/users/{user_id}", **payload)
     data = json.loads(response.data.decode())

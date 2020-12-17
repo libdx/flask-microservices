@@ -7,6 +7,9 @@ from sqlalchemy.sql import func
 
 from project import bcrypt, db
 
+# TODO: invalidate refresh tokens
+# storing single refresh token per user in database (create separate table)
+
 
 class User(db.Model):
     """User representation"""
@@ -33,6 +36,10 @@ class User(db.Model):
 
     def __repr__(self):
         return f"User {self.id} {self.email}"
+
+    def check_password(self, password):
+        """Tests given password agains user's password."""
+        return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
     def encode_token(user_id, token_type="access"):
@@ -62,6 +69,15 @@ class User(db.Model):
 
     @staticmethod
     def decode_token(token):
+        """Decodes token returning user id.
+
+        Args:
+            token (Union[str, bytes]): access or refresh token created by
+                :meth: User.encode_token.
+
+        Returns:
+            user_id (int): user identifier.
+        """
         payload = jwt.decode(token, current_app.config["SECRET_KEY"])
         return payload["sub"]
 
