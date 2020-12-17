@@ -1,5 +1,8 @@
+import datetime
 import os
 
+import jwt
+from flask import current_app
 from sqlalchemy.sql import func
 
 from project import bcrypt, db
@@ -30,6 +33,37 @@ class User(db.Model):
 
     def __repr__(self):
         return f"User {self.id} {self.email}"
+
+    @staticmethod
+    def encode_token(user_id, token_type="access"):
+        """Creates JWT token.
+
+        Args:
+            user_id (int): user identifier.
+            token_type (str): type of the token: "access" or "refresh".
+                Default is "access".
+
+        Returns:
+            token (bytes): encoded JWT token.
+        """
+        if token_type == "access":
+            timedelta_seconds = current_app.config["ACCESS_TOKEN_EXPIRATION"]
+        else:
+            timedelta_seconds = current_app.config["REFRESH_TOKEN_EXPIRATION"]
+
+        payload = {
+            "exp": datetime.datetime.utcnow()
+            + datetime.timedelta(days=0, seconds=timedelta_seconds),
+            "iat": datetime.datetime.utcnow(),
+            "sub": user_id,
+        }
+        secret_key = current_app.config.get("SECRET_KEY")
+        return jwt.encode(payload, secret_key, algorithm="HS256")
+
+    @staticmethod
+    def decode_token(token):
+        payload = jwt.decode(token, current_app.config["SECRET_KEY"])
+        return payload["sub"]
 
 
 if os.getenv("FLASK_ENV") == "development":
